@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<title>少棒補位特訓</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap">
+<style>
+/* Layout: night-game stadium — field diagram on the left, scoreboard-style coaching panel on the right; stacks on phones */
+:root{
+  --night:#0c1d16; --panel:#12291f; --line:#244636; --turf:#1e5737; --turf2:#23653f; --clay:#b47248;
+  --chalk:#f2f0e6; --muted:#9db7a7; --lamp:#ffc53d; --good:#5fd38d; --bad:#ff6b5b;
+  --t-ball:#ffffff; --t-base:#6cb6ff; --t-cut:#ffc53d; --t-back:#5fd38d; --t-hold:#c3a8ff;
+  --display:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;
+  --num:"Barlow Condensed","Arial Narrow",sans-serif;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{background:var(--night);color:var(--chalk);font-family:var(--display);font-size:15px;line-height:1.6;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:16px 32px}
+*{box-sizing:border-box}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:3px solid var(--lamp);outline-offset:2px}
+
+.top{max-width:1180px;margin:0 auto 14px;display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:12px}
+.brand h1{margin:0;font-weight:900;font-size:clamp(24px,4vw,34px);letter-spacing:.04em;line-height:1.15;text-wrap:balance}
+.brand p{margin:2px 0 0;color:var(--muted);font-size:14px}
+.board{display:flex;gap:2px;background:var(--line);border-radius:6px;overflow:hidden;border:1px solid var(--line)}
+.board div{background:#08140f;padding:6px 14px;text-align:center;min-width:72px}
+.board small{display:block;font-size:11px;color:var(--muted);letter-spacing:.12em}
+.board b{font-family:var(--num);font-size:26px;color:var(--lamp);line-height:1.1;font-variant-numeric:tabular-nums}
+
+.app{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:880px){.app{grid-template-columns:minmax(0,1fr)}}
+.fieldwrap{min-width:0}
+svg#field{width:100%;height:auto;display:block;max-height:80vh}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+
+.panel{min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px}
+.panel h2{margin:0 0 6px;font-size:22px;font-weight:900;line-height:1.3;text-wrap:balance}
+.panel h3{margin:18px 0 8px;font-size:13px;letter-spacing:.14em;color:var(--muted);font-weight:700}
+.eyebrow{font-family:var(--num);font-size:14px;letter-spacing:.16em;color:var(--lamp)}
+.lead{color:var(--muted);margin:0 0 12px}
+
+.rules{display:grid;gap:8px}
+.rule{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:start;padding:10px 12px;border-radius:8px;background:#0c1f17}
+.rule b.k{font-family:var(--num);font-size:22px;line-height:1;padding-top:3px;min-width:58px}
+.rule p{margin:0;font-size:14px}
+.rule strong{display:block;font-size:15px}
+
+.posgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pos{border:1px solid var(--line);background:#0c1f17;border-radius:8px;padding:10px 6px;text-align:center;transition:border-color .15s,background .15s}
+.pos:hover{border-color:var(--lamp);background:#163527}
+.pos .n{font-family:var(--num);font-size:13px;color:var(--muted)}
+.pos .nm{display:block;font-weight:700;font-size:16px}
+.pos .best{display:block;font-size:12px;color:var(--good);min-height:18px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:8px;padding:12px 20px;font-weight:900;font-size:17px;background:var(--lamp);color:#1a1300}
+.btn:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--chalk);font-weight:700;font-size:15px}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+
+.sit{display:grid;grid-template-columns:64px 1fr;gap:14px;align-items:center;padding:12px;border-radius:8px;background:#0c1f17;margin-bottom:12px}
+.sit p{margin:0}
+.call{display:inline-block;margin-top:6px;font-size:13px;padding:2px 10px;border-radius:999px;border:1px solid var(--lamp);color:var(--lamp)}
+.you{display:inline-flex;align-items:center;gap:8px;font-weight:700}
+.you i{width:12px;height:12px;border-radius:50%;background:var(--lamp);box-shadow:0 0 0 4px rgba(255,197,61,.25)}
+
+.opts{display:grid;gap:8px}
+.opt{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:center;text-align:left;border:1px solid var(--line);background:#0c1f17;border-radius:8px;padding:10px 12px;font-size:15px}
+.opt:hover{border-color:var(--lamp)}
+.opt .l{font-family:var(--num);font-size:20px;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;border:2px dashed var(--lamp);color:var(--lamp)}
+.opt.ok{border-color:var(--good);background:#123a25}
+.opt.no{border-color:var(--bad);background:#3a1a17}
+.opt:disabled{cursor:default}
+
+.verdict{font-size:24px;font-weight:900;margin:0 0 4px}
+.verdict.ok{color:var(--good)} .verdict.no{color:var(--bad)}
+.why{padding:12px;border-radius:8px;background:#0c1f17;margin:8px 0}
+.why b{color:var(--lamp)}
+.point{border-left:3px solid var(--lamp);padding:4px 0 4px 12px;margin:12px 0}
+.team{list-style:none;margin:0;padding:0;display:grid;gap:4px}
+.team li{display:grid;grid-template-columns:12px 84px 1fr;gap:8px;align-items:baseline;font-size:14px;padding:4px 6px;border-radius:6px}
+.team li.me{background:#1d3a2b}
+.team li i{width:10px;height:10px;border-radius:50%;align-self:center}
+.team li .who{font-weight:700}
+
+.recap{list-style:none;padding:0;margin:0;display:grid;gap:4px;font-size:14px}
+.recap li{display:flex;gap:8px}
+.big{font-family:var(--num);font-size:64px;line-height:1;color:var(--lamp)}
+
+.hint{font-size:13px;color:var(--muted);margin-top:10px}
+svg .mk{cursor:pointer}
+svg .pl{cursor:default}
+svg.picking .pl{cursor:pointer}
+@keyframes pulse{0%{r:15;opacity:.9}100%{r:30;opacity:0}}
+.ring{animation:pulse 1.4s ease-out infinite}
+@keyframes spin{to{stroke-dashoffset:-20}}
+.mk .dash{animation:spin 1s linear infinite}
+@media (prefers-reduced-motion:reduce){.ring,.mk .dash{animation:none}}
+</style>
+
+<header class="top">
+  <div class="brand">
+    <h1>少棒補位特訓</h1>
+    <p>球一打出去，九個人都要動。場上沒有觀眾！</p>
+  </div>
+  <div class="board" aria-live="polite">
+    <div><small>守備位置</small><b id="sbPos">—</b></div>
+    <div><small>情境</small><b id="sbRound">0/10</b></div>
+    <div><small>答對</small><b id="sbScore">0</b></div>
+  </div>
+</header>
+
+<main class="app">
+  <section class="fieldwrap">
+    <svg id="field" viewBox="0 0 600 560" role="img" aria-label="棒球場守備圖"></svg>
+    <div class="legend">
+      <span><i style="background:var(--t-ball)"></i>接球 Ball</span>
+      <span><i style="background:var(--t-base)"></i>補壘包 Base</span>
+      <span><i style="background:var(--t-cut)"></i>拉線轉傳 Cut</span>
+      <span><i style="background:var(--t-back)"></i>後方補位 Backup</span>
+      <span><i style="background:var(--t-hold)"></i>守位指揮</span>
+    </div>
+  </section>
+  <section class="panel" id="panel" aria-live="polite"></section>
+</main>
+
+<script>
+(() => {
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const NS = 'http://www.w3.org/2000/svg';
+const B = {H:[300,470],'1B':[390,380],'2B':[300,290],'3B':[210,380]};
+const ORDER = ['H','1B','2B','3B'];
+const HOME = {P:[300,384],C:[300,498],'1B':[376,350],'2B':[346,300],SS:[254,300],'3B':[224,350],LF:[165,205],CF:[300,150],RF:[435,205]};
+const POS = ['P','C','1B','2B','3B','SS','LF','CF','RF'];
+const NAME = {P:'投手',C:'捕手','1B':'一壘手','2B':'二壘手',SS:'游擊手','3B':'三壘手',LF:'左外野手',CF:'中外野手',RF:'右外野手'};
+const SHORT = {P:'投',C:'捕','1B':'一',SS:'游','2B':'二','3B':'三',LF:'左',CF:'中',RF:'右'};
+const NUM = {P:1,C:2,'1B':3,'2B':4,'3B':5,SS:6,LF:7,CF:8,RF:9};
+const TYPE = {ball:['接球','var(--t-ball)'],base:['補壘包','var(--t-base)'],cut:['拉線轉傳','var(--t-cut)'],back:['後方補位','var(--t-back)'],hold:['守位指揮','var(--t-hold)']};
+const r = (x,y,type,act,why) => ({x,y,type,act,why});
+const COV1 = [392,382], COV2 = [300,290], COV3 = [210,380], HP = [300,472];
+
+const SC = [
+{ title:'游擊方向滾地球', on:[], call:'看跑者傳 First',
+  setup:'0 出局、壘上無人。打者打出游擊方向的滾地球，游擊手準備接球傳一壘。',
+  hit:{kind:'ground',to:[246,318]}, runs:[['H','1B']], throws:[[[246,318],[390,380]]],
+  point:'壘上無人時，本壘沒有跑者要看管。捕手沿一壘線跑到一壘手後方，讓「游擊手、一壘手、捕手」三點一線。',
+  roles:{
+    P:r(398,434,'back','往一壘方向移動，再從跑者身後繞進界外區補位','投手不是觀眾。先往一壘方向移動，看到一壘手自己踩壘，就從打者身後繞進界外區，當第二道安全網。'),
+    C:r(426,398,'back','沿一壘線跑到一壘後方補位','壘上無人，捕手不用守本壘。沿一壘線跟跑，站到一壘手後方 20–30 呎，跟游擊手的傳球連成一直線。'),
+    '1B':r(...COV1,'base','回一壘壘包接球','游擊手要傳一壘。一壘手回到壘包，給游擊手一個清楚的目標。'),
+    '2B':r(...COV2,'base','補二壘壘包','游擊手去接球，二壘空了。二壘手補進二壘，萬一一壘暴傳、打者想衝二壘，就有人接球。'),
+    SS:r(246,318,'ball','接球、傳一壘','這是你的球！大聲喊，衝上去接，穩穩傳一壘。'),
+    '3B':r(...COV3,'base','回守三壘','球不在你這邊。退回三壘壘包，不讓跑者趁亂往前跑。'),
+    LF:r(222,262,'back','衝到游擊手後方補位','球可能從游擊手腳下漏過。左外野手往前衝到游擊手正後方，把漏球擋下，一壘安打才不會變成二壘安打。'),
+    CF:r(300,232,'back','到二壘正後方補位','所有二壘的攻防，中外野手都負責正後方補位。'),
+    RF:r(458,350,'back','衝到一壘後方界外區補位','任何內野滾地球，右外野手都要衝到一壘後方界外區，防備往一壘的暴傳。')
+  }},
+{ title:'一壘方向滾地球', on:[], call:'傳 First',
+  setup:'壘上無人。球打在一、二壘之間，一壘手離開壘包往右邊去接球。',
+  hit:{kind:'ground',to:[352,328]}, runs:[['H','1B']], throws:[[[352,328],[386,380]]],
+  point:'一壘手離開壘包去接球，全場只有投手來得及補一壘。投手跑「香蕉路線」：先 45 度衝向一壘線，再沿線平行跑進壘包。',
+  roles:{
+    P:r(386,386,'base','走香蕉路線補一壘','右半邊滾地球，投手不用想，第一時間往一壘衝。先衝向壘包前約 15 呎的一壘線旁，再沿線平行跑，右腳踩壘包內側，接球後順勢衝進界外區。'),
+    C:r(426,398,'back','沿一壘線跑到一壘後方補位','壘上無人，捕手跟到一壘後方，替投手接傳球做保險。'),
+    '1B':r(352,328,'ball','接球、拋給補位的投手','這是你的球。在投手轉頭看你的瞬間把球送出去；下手拋球用指腹推，不要用指尖勾成高吊球。'),
+    '2B':r(372,296,'back','追球後留在一壘手身後補位','球打在一二壘之間，你和一壘手都先往球衝。一壘手接到了，你就留在他身後，球漏過來由你擋下。'),
+    SS:r(...COV2,'base','補二壘壘包','二壘手往右邊追球，二壘空了。游擊手補進二壘，中線不能開天窗。'),
+    '3B':r(...COV3,'base','回守三壘','球在右半邊，三壘手守好三壘壘包。'),
+    LF:r(232,250,'back','往內移到游擊後方支援','球在右半邊，左外野手往內移動到游擊手後方，支援可能傳向二壘的球。'),
+    CF:r(300,232,'back','到二壘正後方補位','游擊手補進二壘，中外野手補在二壘正後方。'),
+    RF:r(458,350,'back','衝到一壘後方界外區補位','往一壘的傳球，右外野手都要到一壘後方。投手跑壘中接球，最需要有人在後面保險。')
+  }},
+{ title:'一壘有人・游擊滾地球', on:['1B'], call:'抓雙殺',
+  setup:'0 出局、一壘有人。游擊方向滾地球，要拚 6-4-3 雙殺。',
+  hit:{kind:'ground',to:[246,318]}, runs:[['1B','2B'],['H','1B']], throws:[[[246,318],[300,290]],[[300,290],[390,380]]],
+  point:'壘上有人時，捕手絕對不能離開本壘！一壘後方的補位改由右外野手負責。同樣是游擊滾地球，有沒有跑者，答案就不一樣。',
+  roles:{
+    P:r(352,420,'back','往一壘方向移動準備補位','投完球馬上動。往一壘方向移動，萬一雙殺的第二傳偏掉，你是近端的安全網。'),
+    C:r(...HP,'hold','守住本壘','壘上有人，本壘一定要有人。捕手留在本壘，一壘後方交給右外野手。'),
+    '1B':r(...COV1,'base','回一壘接雙殺第二傳','第二個出局數在一壘。回到壘包，準備接二壘手的傳球。'),
+    '2B':r(...COV2,'base','補二壘接游擊傳球','游擊手接球，二壘由二壘手補進。接球踩壘再傳一壘，完成雙殺。'),
+    SS:r(246,318,'ball','接球、傳二壘','這是你的球。先抓前位跑者，傳二壘啟動雙殺。'),
+    '3B':r(...COV3,'base','回守三壘','球不在你這邊，守好三壘壘包。'),
+    LF:r(222,262,'back','衝到游擊手後方補位','游擊手漏接，球就會穿到左外野。往前衝到游擊手正後方。'),
+    CF:r(300,232,'back','到二壘正後方補位','游擊手傳往二壘的球如果偏掉，中外野手在二壘正後方接住，跑者就不能多跑。'),
+    RF:r(458,350,'back','衝到一壘後方界外區補位','捕手要守本壘，一壘後方只能靠你！全速衝進一壘後方界外區。')
+  }},
+{ title:'一壘有人・三壘線短打', on:['1B'], call:'先抓確定的出局數',
+  setup:'0 出局、一壘有人。打者把球點向三壘線，三壘手衝出來接球，準備傳一壘。',
+  hit:{kind:'bunt',to:[244,428]}, runs:[['1B','2B'],['H','1B']], throws:[[[244,428],[388,380]]],
+  point:'短打三口訣：Charge、Cover、Call。角落趨前、二游補壘、聽捕手口令。三壘手出來接球，三壘就由投手補。',
+  roles:{
+    P:r(212,378,'base','轉身補三壘壘包','三壘手親自衝出來接球，三壘空了！投手確認球由三壘手處理後，立刻轉身補三壘。'),
+    C:r(...HP,'hold','守本壘、大聲指揮傳一壘','捕手面對全場，看得最清楚。大聲喊「One！」，指揮三壘手先抓確定的一壘出局。'),
+    '1B':r(350,424,'hold','趨前封鎖一壘側短打','一壘手在投球時就全力趨前，封鎖一壘側的短打。'),
+    '2B':r(...COV1,'base','補進一壘壘包','一壘手衝出來防短打，一壘空了。二壘手第一時間補進一壘接傳球。'),
+    SS:r(...COV2,'base','補進二壘壘包','二壘手去了一壘，游擊手補進二壘。如果有機會封殺一壘跑者，就靠你。'),
+    '3B':r(244,428,'ball','趨前接球、傳一壘','這是你的球。衝上前接球，聽捕手口令，穩穩傳一壘。'),
+    LF:r(166,412,'back','推進到三壘後方補位','投手去補三壘，三壘後方要有人。左外野手往前推進到三壘後方。'),
+    CF:r(300,232,'back','推進到二壘後方補位','游擊手補二壘，中外野手推進到二壘後方。'),
+    RF:r(458,350,'back','推進到一壘後方補位','二壘手補一壘接傳球，右外野手衝到一壘後方防暴傳。')
+  }},
+{ title:'左外野一壘安打', on:[], call:'安打 Second！（0 + 2 = 2）',
+  setup:'壘上無人。打者擊出左外野的一壘安打，左外野手要把球傳回內野。',
+  hit:{kind:'line',to:[175,220]}, runs:[['H','1B']], throws:[[[175,220],[240,256]],[[240,256],[300,290]]],
+  point:'「安打 + 2」：壘上無人，目標壘是二壘。游擊手出去拉線當咖斗，投手和右外野手在二壘後方排成近、遠兩道安全網。',
+  roles:{
+    P:r(334,312,'back','到二壘後方當近端安全網','球打到外野，投手全速衝到「球要傳去的壘包」後方約 20 呎。壘上無人的一壘安打，就是二壘後方。'),
+    C:r(426,398,'back','跑到一壘後方補位','壘上無人，捕手跑到一壘後方，防打者繞過一壘太遠時的回傳。'),
+    '1B':r(...COV1,'base','看打者踩壘、守一壘','盯著打者有沒有踩到一壘，然後守住壘包。打者繞太遠，球就能傳回來刺殺他。'),
+    '2B':r(...COV2,'base','進二壘壘包接球','游擊手出去拉線，二壘由二壘手守，準備接轉傳。'),
+    SS:r(240,256,'cut','跑到左外野與二壘之間當咖斗','站上外野手和二壘的連線，雙手高舉喊「咖斗！咖斗！」，給左外野手清楚的標靶。'),
+    '3B':r(...COV3,'base','守三壘','守好三壘壘包，看著跑者。'),
+    LF:r(175,220,'ball','接球、傳給咖斗','這是你的球。接到後瞄準咖斗胸口到頭部的高度平傳。'),
+    CF:r(150,176,'back','跑到左外野手身後協防','外野手漏接就沒人擋了。中外野手跑到左外野手斜後方，形成第二道防線。'),
+    RF:r(380,332,'back','衝進一二壘之間，當二壘遠端安全網','左外野傳向二壘的球偏掉，會往一二壘之間滾。右外野手衝進來當最遠的那道網。')
+  }},
+{ title:'一壘有人・右外野安打', on:['1B'], call:'安打 Third！（1 + 2 = 3）',
+  setup:'一壘有人。打者擊出右外野一壘安打，一壘跑者拚命衝向三壘。',
+  hit:{kind:'line',to:[440,220]}, runs:[['1B','3B'],['H','1B']], throws:[[[440,220],[290,324]],[[290,324],[212,380]]],
+  point:'一壘有人，目標壘是三壘。最常見的錯誤是轉傳手習慣性拉二壘的線。記住「安打 + 2」。',
+  roles:{
+    P:r(160,420,'back','退到三壘正後方最深處補位','跑者要衝三壘，右外野的長傳一旦偏掉就會滾向三壘後方。投手全速退到三壘後方，越深越好。'),
+    C:r(...HP,'hold','守本壘','壘上有人，捕手守住本壘，跑者繞三壘想衝本壘時才有人接。'),
+    '1B':r(...COV1,'base','看打者踩壘、守一壘','守住一壘，打者繞過一壘太遠時，球可以傳回來刺殺他。'),
+    '2B':r(...COV2,'base','守二壘','游擊手出去拉線，二壘由二壘手守，打者想衝二壘時有人接。'),
+    SS:r(290,324,'cut','站到右外野與三壘的連線上當咖斗','傳三壘時，不論左、中、右外野，咖斗原則上都是游擊手。'),
+    '3B':r(...COV3,'base','守三壘，喊「左邊、右邊」幫忙拉線','你是第二呼叫者。對游擊手喊「左邊！」「右邊！」，到線上時喊「好！」。'),
+    LF:r(172,334,'back','到三壘後方（外野側）補位','中、右外野安打傳三壘時，左外野手和投手一起在三壘後方形成雙重安全網。'),
+    CF:r(470,190,'back','到右外野手身後協防','相鄰的外野手要跑到接球外野手的身後，防漏接。'),
+    RF:r(440,220,'ball','接球、傳給咖斗','這是你的球。接到後壓低球路，傳給游擊手。')
+  }},
+{ title:'二壘有人・中外野安打', on:['2B'], call:'安打 Home！（2 + 2 = 4）',
+  setup:'二壘有人。打者擊出中外野一壘安打，二壘跑者繞過三壘衝本壘。',
+  hit:{kind:'line',to:[300,180]}, runs:[['2B','H'],['H','1B']], throws:[[[300,180],[300,428]],[[300,428],[300,468]]],
+  point:'目標壘是本壘。一壘手當本壘咖斗，游擊手當三壘咖斗。投手先跑到三壘與本壘之間的夾角，看傳球方向再決定補哪裡。',
+  roles:{
+    P:r(196,478,'back','跑到三壘與本壘之間的夾角後方','跑者可能衝本壘，也可能停三壘。先到三壘線與本壘之間的夾角，一邊跑一邊看，外野手傳哪裡就補哪裡的正後方。'),
+    C:r(...HP,'hold','守本壘，決定要不要攔截','你是最後的決策者：讓球直接過、喊「Cut Home」，或喊「Cut Three」改抓三壘。'),
+    '1B':r(300,428,'cut','到投手丘與本壘之間當本壘咖斗','中外野、右外野安打傳本壘時，一壘手是本壘咖斗。'),
+    '2B':r(...COV2,'base','守二壘','一壘手出去當咖斗，二壘手守住二壘，防打者趁傳本壘時跑上二壘。'),
+    SS:r(240,312,'cut','到中外野與三壘的連線上當三壘咖斗','一壘手負責本壘線，游擊手負責三壘線。捕手改抓三壘時就靠你。'),
+    '3B':r(...COV3,'base','守三壘','守好三壘壘包，看跑者有沒有踩壘。'),
+    LF:r(166,344,'back','到三壘後方補位','中、右外野安打時，左外野手負責三壘後方。'),
+    CF:r(300,180,'ball','接球、傳給本壘咖斗','這是你的球。瞄準一壘手的胸口平傳，寧可彈地也不要高吊球。'),
+    RF:r(350,148,'back','跑到中外野手身後協防','相鄰的外野手跑到接球外野手的身後，防漏接。')
+  }},
+{ title:'一壘有人・盜二壘', on:['1B'], call:'右打者：二壘手進壘',
+  setup:'一壘有人，右打者。投手投球，一壘跑者起跑盜二壘，捕手接球準備傳二壘。',
+  hit:{kind:'pitch',to:[300,480]}, runs:[['1B','2B']], throws:[[[300,480],[300,292]]],
+  point:'面對右打者，球容易打向三游之間，所以由二壘手進二壘接球。沒進壘包的游擊手繞到二壘後方，中外野手再補更後面。',
+  roles:{
+    P:r(300,384,'hold','蹲低、讓出傳球線','捕手要從你頭上傳二壘。投完球立刻蹲低或閃開，不要擋到傳球。'),
+    C:r(300,480,'ball','接球、傳二壘','這是你的球。快速起身，壓低球路傳往二壘。'),
+    '1B':r(392,372,'base','守一壘','跑者離開一壘了，一壘手守住壘包，防打者或跑者折返。'),
+    '2B':r(...COV2,'base','進二壘壘包接球觸殺','面對右打者，由二壘手進壘。接球後把手套壓在跑者滑進來的路線上。'),
+    SS:r(276,262,'back','繞到二壘後方補位','沒有進壘包的中線內野手，盜壘時就是二壘後方第一道安全網。'),
+    '3B':r(...COV3,'base','守三壘','傳球如果穿過二壘，跑者會往三壘衝，三壘手要在壘包上。'),
+    LF:r(186,322,'back','往三壘後方移動準備','左外野手負責所有三壘攻防的後方補位。二壘傳球偏掉，下一站就是三壘。'),
+    CF:r(300,214,'back','到二壘正後方補位','中外野手負責所有二壘攻防的正後方補位，傳球穿過游擊手時還有你。'),
+    RF:r(392,250,'back','往中間靠攏支援二壘','傳球偏向一壘側時，右外野手往中間靠攏協助撿球。')
+  }},
+{ title:'三壘有人・暴投', on:['3B'], call:'球漏過去，我進本壘！',
+  setup:'三壘有人。投手投出暴投，球滾到本壘正後方的擋網下，三壘跑者衝向本壘。',
+  hit:{kind:'wild',to:[300,540]}, runs:[['3B','H']], throws:[[[300,540],[304,464]]],
+  point:'「球漏過去，我進本壘！」投手衝本壘時伸手指球，大喊四向口令幫捕手找球：One（一壘側）、Two（正後方）、Three（三壘側）、Down（腳邊）。接到球之前不能擋在本壘板上。',
+  roles:{
+    P:r(304,462,'base','衝本壘補位，指著球喊「Two！」','捕手戴面罩回頭找不到球。投手衝向本壘、指球喊「Two！Two！」，停在本壘板前緣略偏三壘側，接到球再觸殺。'),
+    C:r(300,540,'ball','回頭撿球、傳給投手','順著投手的手指找球，脫掉面罩往旁邊丟，撿到球後用胸口高度平傳給投手。'),
+    '1B':r(356,520,'back','跑到本壘後方（一壘側）補位','一壘沒有跑者，一壘手跑到本壘後方，捕手回傳偏掉時你能擋下。'),
+    '2B':r(300,398,'back','補投手丘','投手去本壘了，二壘手補到投手丘，投手漏接時球不會一路滾遠。'),
+    SS:r(...COV2,'base','守二壘','其他內野手各自守住二、三壘壘包，防打者或其他跑者推進。'),
+    '3B':r(...COV3,'base','回守三壘壘包','三壘跑者衝出去了，三壘手守住三壘，萬一跑者折返有人接。'),
+    LF:r(190,300,'hold','往內移動、支援三壘','外野手往內推進，隨時準備支援壘包。'),
+    CF:r(300,232,'hold','往二壘方向推進','外野手往內推進，隨時準備支援二壘。'),
+    RF:r(420,300,'hold','往一壘方向推進','外野手往內推進，隨時準備支援一壘。')
+  }},
+{ title:'滿壘・右外野深遠長打', on:['1B','2B','3B'], call:'噢把 Home！（1 + 3 = 4）',
+  setup:'滿壘。打者轟出飛越右外野手頭頂的深遠長打（噢把球），球滾到全壘打牆邊。',
+  hit:{kind:'fly',to:[478,118]}, runs:[['3B','H'],['2B','H'],['1B','H'],['H','2B']], throws:[[[478,118],[434,168]],[[434,168],[300,468]]],
+  point:'二、三壘跑者一定回來得分，防守目標是一壘跑者（1 + 3 = 本壘）。二壘手在前、一壘手在後做雙人轉傳，游擊手當本壘前的「監視器」，二壘直接棄守。',
+  roles:{
+    P:r(300,530,'back','退到本壘正後方最深處補位','一壘有人的深遠長打，投手直接補本壘最深處，越深越好。'),
+    C:r(...HP,'hold','守本壘，指揮監視器','捕手判斷殺本壘來不及，就喊監視器攔下來轉傳三壘，抓想上三壘的打者。'),
+    '1B':r(404,202,'cut','當後位跟隨手（Trail）','站在前位轉傳手身後約 10 碼。前位放過的過頂球或長彈跳由你接，還要轉頭看跑者，幫前位喊指令。'),
+    '2B':r(434,168,'cut','衝出去當前位轉傳手（Lead）','右半邊的噢把球，二壘手是前位轉傳手，跑到外野草皮上，對準本壘拉一直線。'),
+    SS:r(330,396,'cut','站內野傳球線上當本壘「監視器」','轉傳球飛往本壘的半途，捕手喊你攔下，就轉傳三壘抓打者。'),
+    '3B':r(...COV3,'base','守三壘，看跑者踩壘','退回三壘壘包內側，盯著每個跑者有沒有踩到壘包。'),
+    LF:r(160,420,'back','全速衝往三壘後方補位','右外野長打傳三壘或監視器轉傳三壘時，左外野手是三壘後方的安全網。'),
+    CF:r(440,118,'back','往右外野協防','中外野手支援右外野手追球，並喊出目標壘「Home！」。'),
+    RF:r(478,118,'ball','追球、傳給前位轉傳手','這是你的球。撿到球立刻傳給二壘手，不要自己長傳本壘。')
+  }}
+];
+
+/* ---------- field drawing ---------- */
+const svg = document.getElementById('field');
+const el = (tag, attrs={}, parent=svg) => { const n=document.createElementNS(NS,tag); for (const k in attrs) n.setAttribute(k,attrs[k]); parent.appendChild(n); return n; };
+
+el('rect',{x:0,y:0,width:600,height:560,fill:'#15402a'});
+el('path',{d:'M300,470 L17,187 A400,400 0 0 1 583,187 Z',fill:'var(--turf)'});
+// mowing stripes
+const stripes = el('g',{opacity:.35});
+for (let k=1;k<9;k++){ const rr=k*48; el('path',{d:`M${300-rr*0.7071},${470-rr*0.7071} A${rr},${rr} 0 0 1 ${300+rr*0.7071},${470-rr*0.7071}`,stroke:'var(--turf2)','stroke-width':22,fill:'none'},stripes); }
+el('path',{d:'M17,187 A400,400 0 0 1 583,187',stroke:'#7a5a3a','stroke-width':10,fill:'none',opacity:.8});
+el('path',{d:'M14,184 A404,404 0 0 1 586,184',stroke:'#0a1a12','stroke-width':4,fill:'none'});
+el('circle',{cx:300,cy:395,r:134,fill:'var(--clay)'});
+el('path',{d:'M300,452 L372,380 L300,308 L228,380 Z',fill:'var(--turf)'});
+el('circle',{cx:300,cy:395,r:13,fill:'var(--clay)'});
+el('rect',{x:294,y:393,width:12,height:3,fill:'var(--chalk)'});
+el('circle',{cx:300,cy:470,r:24,fill:'var(--clay)'});
+el('line',{x1:300,y1:470,x2:17,y2:187,stroke:'var(--chalk)','stroke-width':2});
+el('line',{x1:300,y1:470,x2:583,y2:187,stroke:'var(--chalk)','stroke-width':2});
+for (const k of ['1B','2B','3B']) { const [x,y]=B[k]; el('rect',{x:x-6,y:y-6,width:12,height:12,fill:'var(--chalk)',transform:`rotate(45 ${x} ${y})`}); }
+el('path',{d:'M293,466 L307,466 L307,472 L300,478 L293,472 Z',fill:'var(--chalk)'});
+const lbl = (x,y,t) => { const n=el('text',{x,y,'text-anchor':'middle','font-size':11,fill:'var(--chalk)',opacity:.55,'font-family':'var(--display)'}); n.textContent=t; };
+lbl(300,560-4,'本壘後方'); lbl(120,140,'左外野'); lbl(300,92,'中外野'); lbl(480,140,'右外野');
+
+const gTrails = el('g'), gMarks = el('g'), gRunners = el('g'), gPlayers = el('g');
+const ballShadow = el('ellipse',{rx:5,ry:2.5,fill:'#000',opacity:.35,visibility:'hidden'});
+const ball = el('circle',{r:5.5,fill:'#fff',stroke:'#c0392b','stroke-width':1.2,visibility:'hidden'});
+
+const players = {};
+for (const p of POS) {
+  const g = el('g',{class:'pl',tabindex:-1,'data-pos':p},gPlayers);
+  const ring = el('circle',{r:15,fill:'none',stroke:'var(--lamp)','stroke-width':3,class:'ring',visibility:'hidden'},g);
+  const c = el('circle',{r:14,fill:'#0c1d16',stroke:'var(--chalk)','stroke-width':2.5},g);
+  const t = el('text',{'text-anchor':'middle','dominant-baseline':'central','font-size':14,'font-weight':700,fill:'var(--chalk)','font-family':'var(--display)'},g);
+  t.textContent = SHORT[p];
+  players[p] = {g,c,t,ring,x:HOME[p][0],y:HOME[p][1]};
+  g.addEventListener('click',()=>{ if (state.mode==='pick') pickPos(p); });
+  g.addEventListener('keydown',e=>{ if ((e.key==='Enter'||e.key===' ') && state.mode==='pick'){ e.preventDefault(); pickPos(p);} });
+}
+const place = (p,x,y) => { const o=players[p]; o.x=x; o.y=y; o.g.setAttribute('transform',`translate(${x} ${y})`); };
+const setBall = (x,y,lift=0) => { ball.setAttribute('cx',x); ball.setAttribute('cy',y-lift); ballShadow.setAttribute('cx',x); ballShadow.setAttribute('cy',y+3); };
+const showBall = v => { ball.setAttribute('visibility',v?'visible':'hidden'); ballShadow.setAttribute('visibility',v?'visible':'hidden'); };
+
+/* ---------- animation ---------- */
+let epoch = 0;
+const ease = t => t<.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+const tween = (ms, fn) => new Promise(res => {
+  const my = epoch;
+  if (reduce) { fn(1); return res(); }
+  const s = performance.now();
+  const f = n => { if (my!==epoch) return res(); const t=Math.min(1,(n-s)/ms); fn(t); t<1 ? requestAnimationFrame(f) : res(); };
+  requestAnimationFrame(f);
+});
+const lerp = (a,b,t) => a+(b-a)*t;
+const dist = (a,b) => Math.hypot(a[0]-b[0],a[1]-b[1]);
+
+function basePath(from,to){
+  let i = ORDER.indexOf(from), j = to==='H' ? 4 : ORDER.indexOf(to);
+  const pts = [];
+  for (let k=i;k<=j;k++) pts.push(B[ORDER[k%4]]);
+  return pts;
+}
+function along(pts,t){
+  if (pts.length===1) return pts[0];
+  const seg=[]; let tot=0;
+  for (let i=1;i<pts.length;i++){ const d=dist(pts[i-1],pts[i]); seg.push(d); tot+=d; }
+  let d=t*tot;
+  for (let i=0;i<seg.length;i++){ if (d<=seg[i]||i===seg.length-1){ const u=seg[i]?Math.min(1,d/seg[i]):1; return [lerp(pts[i][0],pts[i+1][0],u),lerp(pts[i][1],pts[i+1][1],u)]; } d-=seg[i]; }
+}
+
+let runners = [];
+function drawRunners(on){
+  gRunners.innerHTML=''; runners=[];
+  for (const b of on){ runners.push(makeRunner(b)); }
+}
+function makeRunner(b){
+  const g=el('g',{},gRunners);
+  el('circle',{r:9,fill:'#d94a3d',stroke:'#fff','stroke-width':2},g);
+  const [x,y]=B[b]; g.setAttribute('transform',`translate(${x+10} ${y-10})`);
+  return {g,base:b};
+}
+
+/* ---------- state ---------- */
+const state = {mode:'pick',pos:null,idx:0,score:0,results:[]};
+let best = {};
+try { best = JSON.parse(localStorage.getItem('bb-backup-best')||'{}') || {}; } catch(e) { best = {}; }
+const saveBest = () => { try { localStorage.setItem('bb-backup-best',JSON.stringify(best)); } catch(e){} };
+const panel = document.getElementById('panel');
+const sb = () => {
+  document.getElementById('sbPos').textContent = state.pos ? `${NUM[state.pos]} ${SHORT[state.pos]}` : '—';
+  document.getElementById('sbRound').textContent = `${state.mode==='pick'?0:Math.min(state.idx+1,SC.length)}/${SC.length}`;
+  document.getElementById('sbScore').textContent = state.score;
+};
+
+function resetField(sc){
+  epoch++;
+  gTrails.innerHTML=''; gMarks.innerHTML='';
+  for (const p of POS){ place(p,...HOME[p]); players[p].c.setAttribute('stroke','var(--chalk)'); players[p].c.setAttribute('fill','#0c1d16'); players[p].t.setAttribute('fill','var(--chalk)'); }
+  highlight(state.pos);
+  drawRunners(sc ? sc.on : []);
+  showBall(false);
+}
+function highlight(pos){
+  for (const p of POS){
+    const me = p===pos;
+    players[p].ring.setAttribute('visibility',me?'visible':'hidden');
+    if (me){ players[p].c.setAttribute('fill','var(--lamp)'); players[p].c.setAttribute('stroke','var(--lamp)'); players[p].t.setAttribute('fill','#1a1300'); }
+  }
+}
+
+/* ---------- screens ---------- */
+function renderPick(){
+  state.mode='pick'; state.pos=null; state.idx=0; state.score=0; state.results=[];
+  svg.classList.add('picking');
+  for (const p of POS){ players[p].g.setAttribute('tabindex',0); players[p].g.setAttribute('role','button'); players[p].g.setAttribute('aria-label',NAME[p]); }
+  resetField(null); sb();
+  panel.innerHTML = `
+    <div class="eyebrow">STEP 1 · 選擇你的守備位置</div>
+    <h2>今天你守哪裡？</h2>
+    <p class="lead">點球場上的球員，或點下面的按鈕。接下來會有 ${SC.length} 個擊球情境，球一打出去，你要決定自己該跑去哪裡。</p>
+    <div class="posgrid">${POS.map(p=>`<button class="pos" data-p="${p}"><span class="n">${NUM[p]} 號</span><span class="nm">${NAME[p]}</span><span class="best">${best[p]!=null?`最佳 ${best[p]}/${SC.length}`:''}</span></button>`).join('')}</div>
+    <h3>防守三部曲（3B 原則）</h3>
+    <div class="rules">
+      <div class="rule"><b class="k" style="color:var(--t-ball)">Ball</b><p><strong>這顆球是我的嗎？</strong>離球最近、角度最好的人去接，大聲喊開隊友。</p></div>
+      <div class="rule"><b class="k" style="color:var(--t-base)">Base</b><p><strong>不是我的球，跑者要去哪？</strong>壘包空了就補進去，或跑到外野手和目標壘之間拉線當咖斗。</p></div>
+      <div class="rule"><b class="k" style="color:var(--t-back)">Backup</b><p><strong>沒接球也沒守壘？</strong>衝到接球者正後方 20–30 呎，和傳球連成一直線，當安全網。</p></div>
+    </div>
+    <p class="hint">台灣球場口訣：接球、拉線、補壘包。補位的人不要站太近，球彈開或傳高會直接飛過你頭上。</p>`;
+  panel.querySelectorAll('.pos').forEach(b=>b.addEventListener('click',()=>pickPos(b.dataset.p)));
+}
+function pickPos(p){
+  state.pos=p; svg.classList.remove('picking');
+  for (const q of POS){ players[q].g.setAttribute('tabindex',-1); players[q].g.removeAttribute('role'); }
+  state.idx=0; state.score=0; state.results=[];
+  renderIntro();
+}
+function miniDiamond(on){
+  const sq=(x,y,b)=>`<rect x="${x-9}" y="${y-9}" width="18" height="18" transform="rotate(45 ${x} ${y})" fill="${on.includes(b)?'#d94a3d':'none'}" stroke="var(--chalk)" stroke-width="2"/>`;
+  return `<svg viewBox="0 0 64 56" width="64" height="56" aria-label="壘上狀況">${sq(32,14,'2B')}${sq(50,32,'1B')}${sq(14,32,'3B')}<path d="M27,46 h10 v4 l-5,4 l-5,-4z" fill="var(--chalk)"/></svg>`;
+}
+function sitCard(sc){
+  return `<div class="sit">${miniDiamond(sc.on)}<div><p>${sc.setup}</p><span class="call">預喊聲：「${sc.call}」</span></div></div>`;
+}
+function renderIntro(){
+  const sc=SC[state.idx]; state.mode='intro';
+  resetField(sc); sb();
+  panel.innerHTML = `
+    <div class="eyebrow">情境 ${state.idx+1} / ${SC.length}</div>
+    <h2>${sc.title}</h2>
+    ${sitCard(sc)}
+    <p class="you"><i></i>你是 ${NUM[state.pos]} 號 ${NAME[state.pos]}</p>
+    <div class="row"><button class="btn" id="go">開打 ▶</button></div>
+    <p class="hint">看清楚球往哪裡飛，再決定你要跑去哪裡。</p>`;
+  const go=document.getElementById('go'); go.focus({preventScroll:true});
+  go.addEventListener('click',()=>{ go.disabled=true; playHit(sc).then(()=>renderChoose(sc)); });
+}
+async function playHit(sc){
+  const m=[300,392], h=[300,466];
+  setBall(...m); showBall(true);
+  await tween(380,t=>setBall(lerp(m[0],h[0],t),lerp(m[1],h[1],t)));
+  const to=sc.hit.to, k=sc.hit.kind;
+  if (k==='pitch') return;
+  const ms = k==='fly'?1100 : k==='bunt'?650 : 750;
+  const peak = k==='fly'?120 : k==='line'?28 : 0;
+  await tween(ms,t=>{ const u=k==='bunt'||k==='ground'?1-Math.pow(1-t,2):t; setBall(lerp(h[0],to[0],u),lerp(h[1],to[1],u),peak*Math.sin(Math.PI*t)); ball.setAttribute('r',5.5+(peak?peak/40:0)*Math.sin(Math.PI*t)); });
+  ball.setAttribute('r',5.5);
+}
+function shuffle(a){ for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function buildOptions(sc){
+  const mine=sc.roles[state.pos]; const picked=[{...mine,correct:true}];
+  const others=shuffle(POS.filter(p=>p!==state.pos).map(p=>sc.roles[p]));
+  for (const o of others){
+    if (picked.length>=4) break;
+    if (picked.every(q=>dist([q.x,q.y],[o.x,o.y])>34 && q.act!==o.act)) picked.push({...o,correct:false});
+  }
+  return shuffle(picked).map((o,i)=>({...o,letter:'ABCD'[i]}));
+}
+function renderChoose(sc){
+  state.mode='choose';
+  const opts=buildOptions(sc);
+  gMarks.innerHTML='';
+  opts.forEach(o=>{
+    const g=el('g',{class:'mk',transform:`translate(${o.x} ${o.y})`},gMarks);
+    el('circle',{r:26,fill:'transparent'},g);
+    el('circle',{r:17,fill:'rgba(12,29,22,.75)',stroke:'var(--lamp)','stroke-width':2.5,'stroke-dasharray':'5 5',class:'dash'},g);
+    const t=el('text',{'text-anchor':'middle','dominant-baseline':'central','font-size':17,'font-weight':700,fill:'var(--lamp)','font-family':'var(--num)'},g); t.textContent=o.letter;
+    g.addEventListener('click',()=>answer(sc,opts,o));
+    o.g=g;
+  });
+  panel.innerHTML = `
+    <div class="eyebrow">情境 ${state.idx+1} / ${SC.length} · 球打出去了！</div>
+    <h2>${NAME[state.pos]}，你要跑去哪裡？</h2>
+    ${sitCard(sc)}
+    <div class="opts">${opts.map(o=>`<button class="opt" data-l="${o.letter}"><span class="l">${o.letter}</span><span>${o.act}</span></button>`).join('')}</div>
+    <p class="hint">可以點按鈕，也可以直接點球場上的 A–D 標記。</p>`;
+  panel.querySelectorAll('.opt').forEach(b=>b.addEventListener('click',()=>answer(sc,opts,opts.find(o=>o.letter===b.dataset.l))));
+  panel.querySelector('.opt').focus({preventScroll:true});
+}
+let answering=false;
+async function answer(sc,opts,o){
+  if (state.mode!=='choose' || answering) return;
+  answering=true; state.mode='reveal';
+  const ok=o.correct; if (ok) state.score++;
+  state.results.push({title:sc.title,ok});
+  sb();
+  panel.querySelectorAll('.opt').forEach(b=>{ b.disabled=true; const oo=opts.find(x=>x.letter===b.dataset.l); if (oo.correct) b.classList.add('ok'); else if (oo===o) b.classList.add('no'); });
+  // markers: keep correct (green) + wrong pick (red)
+  opts.forEach(x=>{ if (!x.correct && x!==o) x.g.remove(); else { const c=x.g.querySelectorAll('circle')[1]; c.classList.remove('dash'); c.setAttribute('stroke',x.correct?'var(--good)':'var(--bad)'); c.setAttribute('stroke-dasharray','none'); x.g.querySelector('text').setAttribute('fill',x.correct?'var(--good)':'var(--bad)'); } });
+  await reveal(sc);
+  answering=false;
+  renderResult(sc,ok,o);
+}
+async function reveal(sc){
+  const start={}; for (const p of POS) start[p]=[players[p].x,players[p].y];
+  const rs = sc.runs.map(([f,t])=>{ let rn = f==='H' ? makeRunner('H') : runners.find(x=>x.base===f); return {rn,path:basePath(f,t)}; });
+  for (const p of POS){ const ty=TYPE[sc.roles[p].type][1]; if (p!==state.pos){ players[p].c.setAttribute('stroke',ty); } }
+  const moveP = tween(1100,t=>{ const u=ease(t); for (const p of POS){ const d=sc.roles[p]; place(p,lerp(start[p][0],d.x,u),lerp(start[p][1],d.y,u)); } });
+  const moveR = tween(1500,t=>{ for (const {rn,path} of rs){ const [x,y]=along(path,t); rn.g.setAttribute('transform',`translate(${x+10} ${y-10})`); } });
+  await moveP;
+  for (const [a,b] of sc.throws){
+    const line=el('line',{x1:a[0],y1:a[1],x2:a[0],y2:a[1],stroke:'#fff','stroke-width':2,'stroke-dasharray':'4 5',opacity:.7},gTrails);
+    await tween(Math.max(260,dist(a,b)*2.2),t=>{ const x=lerp(a[0],b[0],t), y=lerp(a[1],b[1],t); setBall(x,y,10*Math.sin(Math.PI*t)); line.setAttribute('x2',x); line.setAttribute('y2',y); });
+  }
+  await moveR;
+}
+function renderResult(sc,ok,o){
+  const mine=sc.roles[state.pos];
+  const last = state.idx===SC.length-1;
+  panel.innerHTML = `
+    <div class="eyebrow">情境 ${state.idx+1} / ${SC.length} · ${sc.title}</div>
+    <p class="verdict ${ok?'ok':'no'}">${ok?'答對了！':'差一點！'}</p>
+    ${ok?'':`<p class="lead">你選了「${o.act}」，那是別的隊友的任務。</p>`}
+    <div class="why"><b>${NAME[state.pos]}：${mine.act}</b><br>${mine.why}</div>
+    <div class="point">${sc.point}</div>
+    <h3>全隊九人分工</h3>
+    <ul class="team">${POS.map(p=>{ const d=sc.roles[p]; return `<li class="${p===state.pos?'me':''}"><i style="background:${TYPE[d.type][1]}"></i><span class="who">${NUM[p]} ${NAME[p]}</span><span>${d.act}</span></li>`; }).join('')}</ul>
+    <div class="row"><button class="btn" id="next">${last?'看成績 ▶':'下一個情境 ▶'}</button><button class="btn ghost" id="replay">再看一次跑位</button></div>`;
+  const nx=document.getElementById('next'); nx.focus({preventScroll:true});
+  nx.addEventListener('click',()=>{ if (last) renderEnd(); else { state.idx++; renderIntro(); } });
+  document.getElementById('replay').addEventListener('click',async e=>{
+    const b=e.currentTarget; b.disabled=true;
+    const keep=[...gMarks.childNodes];
+    resetField(sc); keep.forEach(n=>gMarks.appendChild(n));
+    await playHit(sc); await reveal(sc); b.disabled=false;
+  });
+}
+function renderEnd(){
+  state.mode='end'; sb();
+  const p=state.pos, s=state.score;
+  if (best[p]==null || s>best[p]) { best[p]=s; saveBest(); }
+  const msg = s===SC.length ? '滿分！你是球場智多星。' : s>=7 ? '很棒！補位觀念已經上身了。' : s>=4 ? '不錯的開始，再練一次會更熟。' : '補位要多練幾次，換個位置也試試看。';
+  panel.innerHTML = `
+    <div class="eyebrow">挑戰完成 · ${NUM[p]} 號 ${NAME[p]}</div>
+    <div class="big">${s}<span style="font-size:28px;color:var(--muted)"> / ${SC.length}</span></div>
+    <h2>${msg}</h2>
+    <ul class="recap">${state.results.map((x,i)=>`<li><span style="color:${x.ok?'var(--good)':'var(--bad)'}">${x.ok?'✓':'✗'}</span>${i+1}. ${x.title}</li>`).join('')}</ul>
+    <h3>帶回家的四句話</h3>
+    <div class="rules">
+      <div class="rule"><b class="k" style="color:var(--lamp)">動</b><p>只要球在動，九個人都要動。場上沒有觀眾。</p></div>
+      <div class="rule"><b class="k" style="color:var(--t-back)">線</b><p>傳球者、接球者、補位者連成一直線，補位站在後方 20–30 呎。</p></div>
+      <div class="rule"><b class="k" style="color:var(--t-cut)">+2</b><p>安打 + 2、飛球 + 1、噢把 + 3，算出目標壘再拉線。</p></div>
+      <div class="rule"><b class="k" style="color:var(--t-base)">空</b><p>壘包空了就要有人補，棒球場上沒有空城計。</p></div>
+    </div>
+    <div class="row"><button class="btn" id="again">同位置再玩</button><button class="btn ghost" id="switch">換一個位置</button></div>`;
+  document.getElementById('again').addEventListener('click',()=>pickPos(p));
+  document.getElementById('switch').addEventListener('click',renderPick);
+  document.getElementById('again').focus({preventScroll:true});
+}
+
+renderPick();
+})();
+</script>
+
+</body>
+</html>
